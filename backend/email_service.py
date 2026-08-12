@@ -23,12 +23,34 @@ Thanks,
 FraudShield-AI Team
 """
 
+    # ============================================================
+    # OTP FOR DEMO
+    # ============================================================
+    # Render Free par Gmail SMTP blocked hone ki wajah se
+    # OTP ko logs mein bhi print kar rahe hain.
+    print("=" * 60)
+    print("FRAUDSHIELD-AI OTP")
+    print("TO:", receiver_email)
+    print("OTP:", otp)
+    print("=" * 60)
+
+    # ============================================================
+    # CREATE EMAIL
+    # ============================================================
+
     message = MIMEMultipart()
     message["From"] = EMAIL_ADDRESS
     message["To"] = receiver_email
     message["Subject"] = subject
 
-    message.attach(MIMEText(body, "plain"))
+    message.attach(
+        MIMEText(
+            body,
+            "plain"
+        )
+    )
+
+    server = None
 
     try:
         print("=" * 60)
@@ -37,34 +59,47 @@ FraudShield-AI Team
         print("TO:", receiver_email)
         print("=" * 60)
 
-        with smtplib.SMTP("smtp.gmail.com", 587, timeout=30) as server:
-            server.ehlo()
-            print("SMTP CONNECTION SUCCESS")
+        # Gmail SMTP
+        server = smtplib.SMTP(
+            "smtp.gmail.com",
+            587,
+            timeout=30
+        )
 
-            server.starttls()
-            server.ehlo()
-            print("TLS SUCCESS")
+        server.ehlo()
+        print("SMTP CONNECTION SUCCESS")
 
-            server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-            print("GMAIL LOGIN SUCCESS")
+        # TLS
+        server.starttls()
+        server.ehlo()
+        print("TLS SUCCESS")
 
-            server.sendmail(
-                EMAIL_ADDRESS,
-                receiver_email,
-                message.as_string()
-            )
+        # Gmail login
+        server.login(
+            EMAIL_ADDRESS,
+            EMAIL_PASSWORD
+        )
 
-            print("OTP EMAIL SENT SUCCESSFULLY")
-            print("=" * 60)
+        print("GMAIL LOGIN SUCCESS")
+
+        # Send email
+        server.sendmail(
+            EMAIL_ADDRESS,
+            receiver_email,
+            message.as_string()
+        )
+
+        print("OTP EMAIL SENT SUCCESSFULLY")
+        print("=" * 60)
 
         return True
 
     except smtplib.SMTPAuthenticationError as e:
         print("=" * 60)
         print("GMAIL AUTHENTICATION ERROR")
-        print("Check EMAIL_ADDRESS and Gmail App Password.")
         print("ERROR:", e)
         print("=" * 60)
+
         return False
 
     except smtplib.SMTPConnectError as e:
@@ -72,6 +107,7 @@ FraudShield-AI Team
         print("GMAIL SMTP CONNECTION ERROR")
         print("ERROR:", e)
         print("=" * 60)
+
         return False
 
     except smtplib.SMTPException as e:
@@ -79,6 +115,7 @@ FraudShield-AI Team
         print("GMAIL SMTP ERROR")
         print("ERROR:", e)
         print("=" * 60)
+
         return False
 
     except Exception as e:
@@ -87,4 +124,12 @@ FraudShield-AI Team
         print(type(e).__name__)
         print("ERROR:", e)
         print("=" * 60)
+
         return False
+
+    finally:
+        if server is not None:
+            try:
+                server.quit()
+            except Exception:
+                pass
