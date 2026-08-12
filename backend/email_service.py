@@ -1,4 +1,3 @@
-
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -6,15 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from config import EMAIL_ADDRESS, EMAIL_PASSWORD
 
 
-# ============================================================
-# SEND OTP EMAIL
-# ============================================================
-
-def send_otp_email(
-    receiver_email: str,
-    otp: str
-):
-
+def send_otp_email(receiver_email: str, otp: str) -> bool:
     subject = "FraudShield-AI OTP Verification"
 
     body = f"""
@@ -32,117 +23,68 @@ Thanks,
 FraudShield-AI Team
 """
 
-    # ========================================================
-    # CREATE EMAIL
-    # ========================================================
-
     message = MIMEMultipart()
-
     message["From"] = EMAIL_ADDRESS
     message["To"] = receiver_email
     message["Subject"] = subject
 
-    message.attach(
-        MIMEText(
-            body,
-            "plain"
-        )
-    )
-
-    # ========================================================
-    # SEND EMAIL
-    # ========================================================
-
-    server = None
+    message.attach(MIMEText(body, "plain"))
 
     try:
-
         print("=" * 60)
-        print("EMAIL SENDING STARTED")
-        print("From:", EMAIL_ADDRESS)
-        print("To:", receiver_email)
+        print("OTP EMAIL STARTED")
+        print("FROM:", EMAIL_ADDRESS)
+        print("TO:", receiver_email)
         print("=" * 60)
 
-        # Connect to Gmail SMTP
-        server = smtplib.SMTP(
-            "smtp.gmail.com",
-            587,
-            timeout=15
-        )
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=30) as server:
+            server.ehlo()
+            print("SMTP CONNECTION SUCCESS")
 
-        print("SMTP CONNECTION SUCCESS")
+            server.starttls()
+            server.ehlo()
+            print("TLS SUCCESS")
 
-        # Enable debugging
-        server.set_debuglevel(1)
+            server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+            print("GMAIL LOGIN SUCCESS")
 
-        # Start TLS encryption
-        server.starttls()
+            server.sendmail(
+                EMAIL_ADDRESS,
+                receiver_email,
+                message.as_string()
+            )
 
-        print("TLS CONNECTION SUCCESS")
-
-        # Login with Gmail + App Password
-        server.login(
-            EMAIL_ADDRESS,
-            EMAIL_PASSWORD
-        )
-
-        print("GMAIL LOGIN SUCCESS")
-
-        # Send email
-        server.sendmail(
-            EMAIL_ADDRESS,
-            receiver_email,
-            message.as_string()
-        )
-
-        print("OTP EMAIL SENT SUCCESSFULLY")
-        print("=" * 60)
+            print("OTP EMAIL SENT SUCCESSFULLY")
+            print("=" * 60)
 
         return True
 
     except smtplib.SMTPAuthenticationError as e:
-
         print("=" * 60)
         print("GMAIL AUTHENTICATION ERROR")
-        print(e)
+        print("Check EMAIL_ADDRESS and Gmail App Password.")
+        print("ERROR:", e)
         print("=" * 60)
-
         return False
 
     except smtplib.SMTPConnectError as e:
-
         print("=" * 60)
-        print("GMAIL CONNECTION ERROR")
-        print(e)
+        print("GMAIL SMTP CONNECTION ERROR")
+        print("ERROR:", e)
         print("=" * 60)
-
         return False
 
-    except TimeoutError as e:
-
+    except smtplib.SMTPException as e:
         print("=" * 60)
-        print("GMAIL CONNECTION TIMEOUT")
-        print(e)
+        print("GMAIL SMTP ERROR")
+        print("ERROR:", e)
         print("=" * 60)
-
         return False
 
     except Exception as e:
-
         print("=" * 60)
         print("EMAIL ERROR")
         print(type(e).__name__)
-        print(e)
+        print("ERROR:", e)
         print("=" * 60)
-
         return False
-
-    finally:
-
-        if server is not None:
-
-            try:
-                server.quit()
-            except Exception:
-                pass
-
