@@ -42,3 +42,6 @@ Thumbs.db
 
 # ML temporary files
 *.tmp
+backend.zip2.zip
+backend/transaction_backup.py
+ml/fraud_model_backup.pkl
