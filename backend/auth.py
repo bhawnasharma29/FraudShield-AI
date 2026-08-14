@@ -195,6 +195,10 @@ def verify_user_otp(
     db: Session = Depends(get_db)
 ):
 
+    # --------------------------------------------------------
+    # FIND USER
+    # --------------------------------------------------------
+
     user = db.query(User).filter(
         User.email == data.email
     ).first()
@@ -206,14 +210,8 @@ def verify_user_otp(
             detail="User not found"
         )
 
-    if user.is_verified:
-
-        return {
-            "message": "User already verified"
-        }
-
     # --------------------------------------------------------
-    # VERIFY OTP
+    # CHECK OTP
     # --------------------------------------------------------
 
     if not verify_otp(
@@ -257,6 +255,10 @@ def resend_otp(
     db: Session = Depends(get_db)
 ):
 
+    # --------------------------------------------------------
+    # FIND EXISTING USER
+    # --------------------------------------------------------
+
     user = db.query(User).filter(
         User.email == email
     ).first()
@@ -266,13 +268,6 @@ def resend_otp(
         raise HTTPException(
             status_code=404,
             detail="User not found"
-        )
-
-    if user.is_verified:
-
-        raise HTTPException(
-            status_code=400,
-            detail="User already verified"
         )
 
     # --------------------------------------------------------
@@ -285,10 +280,16 @@ def resend_otp(
 
     user.otp_expiry = get_otp_expiry()
 
+    # --------------------------------------------------------
+    # ALLOW OTP VERIFICATION AGAIN
+    # --------------------------------------------------------
+
+    user.is_verified = False
+
     db.commit()
 
     # --------------------------------------------------------
-    # SEND EMAIL
+    # SEND EMAIL OTP
     # --------------------------------------------------------
 
     email_sent = send_otp_email(
@@ -297,7 +298,7 @@ def resend_otp(
     )
 
     # --------------------------------------------------------
-    # SEND SMS
+    # SEND SMS OTP
     # --------------------------------------------------------
 
     sms_sent = send_otp_sms(
@@ -305,9 +306,13 @@ def resend_otp(
         new_otp
     )
 
+    # --------------------------------------------------------
+    # RESPONSE
+    # --------------------------------------------------------
+
     return {
 
-        "message": "OTP resent successfully",
+        "message": "OTP sent successfully",
 
         "email_sent": email_sent,
 
@@ -436,7 +441,7 @@ def get_current_user(
         )
 
     # --------------------------------------------------------
-    # FIND USER
+    # CONVERT USER ID
     # --------------------------------------------------------
 
     try:
@@ -449,6 +454,10 @@ def get_current_user(
             status_code=401,
             detail="Invalid token"
         )
+
+    # --------------------------------------------------------
+    # FIND USER
+    # --------------------------------------------------------
 
     user = db.query(User).filter(
         User.id == user_id
