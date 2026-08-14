@@ -69,8 +69,8 @@ function App() {
         Accept: "application/json",
         ...(savedToken
           ? {
-            Authorization: `Bearer ${savedToken}`,
-          }
+              Authorization: `Bearer ${savedToken}`,
+            }
           : {}),
       },
     });
@@ -97,7 +97,7 @@ function App() {
 
       setAuthMessage(
         response.data?.message ||
-        "Registration successful. OTP verify karo."
+          "Registration successful. OTP verify karo."
       );
 
       setOtpEmail(registerEmail);
@@ -112,7 +112,7 @@ function App() {
 
       setAuthError(
         err.response?.data?.detail ||
-        "Registration failed. Details check karo."
+          "Registration failed. Details check karo."
       );
     } finally {
       setRegisterLoading(false);
@@ -131,14 +131,17 @@ function App() {
       setAuthError("");
       setAuthMessage("");
 
-      const response = await axios.post(`${API_URL}/auth/verify-otp`, {
-        email: otpEmail,
-        otp: otp,
-      });
+      const response = await axios.post(
+        `${API_URL}/auth/verify-otp`,
+        {
+          email: otpEmail,
+          otp: otp,
+        }
+      );
 
       setAuthMessage(
         response.data?.message ||
-        "OTP verified successfully. Ab login karo."
+          "OTP verified successfully. Ab login karo."
       );
 
       setOtp("");
@@ -152,7 +155,7 @@ function App() {
 
       setAuthError(
         err.response?.data?.detail ||
-        "OTP verification failed."
+          "OTP verification failed."
       );
     } finally {
       setOtpLoading(false);
@@ -161,6 +164,7 @@ function App() {
 
   // =========================================================
   // RESEND OTP
+  // FIXED: backend expects email as query parameter
   // =========================================================
 
   const handleResendOTP = async () => {
@@ -175,22 +179,21 @@ function App() {
       setAuthMessage("");
 
       const response = await axios.post(
-        `${API_URL}/auth/resend-otp`,
-        {
-          email: otpEmail,
-        }
+        `${API_URL}/auth/resend-otp?email=${encodeURIComponent(
+          otpEmail
+        )}`
       );
 
       setAuthMessage(
         response.data?.message ||
-        "OTP dobara send kar diya gaya hai."
+          "OTP dobara send kar diya gaya hai."
       );
     } catch (err) {
       console.error("Resend OTP Error:", err);
 
       setAuthError(
         err.response?.data?.detail ||
-        "OTP resend nahi ho paya."
+          "OTP resend nahi ho paya."
       );
     } finally {
       setResendLoading(false);
@@ -230,7 +233,8 @@ function App() {
         }
       );
 
-      const accessToken = response.data?.access_token;
+      const accessToken =
+        response.data?.access_token;
 
       if (!accessToken) {
         setAuthError(
@@ -250,7 +254,7 @@ function App() {
 
       setAuthError(
         err.response?.data?.detail ||
-        "Invalid email or password."
+          "Invalid email or password."
       );
     } finally {
       setLoginLoading(false);
@@ -330,7 +334,7 @@ function App() {
 
       setError(
         err.response?.data?.detail ||
-        "Dashboard data load nahi ho pa raha."
+          "Dashboard data load nahi ho pa raha."
       );
     } finally {
       setLoading(false);
@@ -372,12 +376,15 @@ function App() {
 
       const api = getApi();
 
-      const response = await api.post("/transactions/", {
-        amount: Number(amount),
-        transaction_type: transactionType,
-        merchant: merchant.trim(),
-        location: location.trim(),
-      });
+      const response = await api.post(
+        "/transactions/",
+        {
+          amount: Number(amount),
+          transaction_type: transactionType,
+          merchant: merchant.trim(),
+          location: location.trim(),
+        }
+      );
 
       setTransactionResult(response.data);
 
@@ -393,6 +400,7 @@ function App() {
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
         setToken(null);
+
         setTransactionError(
           "Session expire ho gaya. Dobara login karo."
         );
@@ -401,7 +409,7 @@ function App() {
 
       setTransactionError(
         err.response?.data?.detail ||
-        "Transaction submit nahi ho paayi."
+          "Transaction submit nahi ho paayi."
       );
     } finally {
       setTransactionLoading(false);
@@ -1022,7 +1030,7 @@ function App() {
             <div>
               <h2>
                 {transactionResult.fraud_status ===
-                  "Fraud"
+                "Fraud"
                   ? "🚨 Fraud Detected"
                   : "✅ Transaction Result"}
               </h2>
@@ -1067,8 +1075,7 @@ function App() {
               <p>Risk Score</p>
 
               <h2>
-                {transactionResult.risk_score ??
-                  0}
+                {transactionResult.risk_score ?? 0}
                 /100
               </h2>
             </div>
@@ -1117,17 +1124,17 @@ function App() {
 
           {transactionResult.is_blocked !==
             undefined && (
-              <div
-                style={{
-                  padding: "0 20px 20px",
-                  fontWeight: "700",
-                }}
-              >
-                {transactionResult.is_blocked
-                  ? "🔒 Transaction BLOCKED"
-                  : "✅ Transaction Allowed"}
-              </div>
-            )}
+            <div
+              style={{
+                padding: "0 20px 20px",
+                fontWeight: "700",
+              }}
+            >
+              {transactionResult.is_blocked
+                ? "🔒 Transaction BLOCKED"
+                : "✅ Transaction Allowed"}
+            </div>
+          )}
         </section>
       )}
 
@@ -1246,7 +1253,7 @@ function App() {
                   style={{
                     width: `${Math.min(
                       analytics.average_risk_score ||
-                      0,
+                        0,
                       100
                     )}%`,
                   }}
@@ -1297,8 +1304,8 @@ function App() {
                   const fraudRate =
                     data.total_transactions > 0
                       ? (data.fraud_transactions /
-                        data.total_transactions) *
-                      100
+                          data.total_transactions) *
+                        100
                       : 0;
 
                   return (
@@ -1339,8 +1346,8 @@ function App() {
                             fraudRate >= 50
                               ? "badge danger"
                               : fraudRate > 0
-                                ? "badge warning"
-                                : "badge safe"
+                              ? "badge warning"
+                              : "badge safe"
                           }
                         >
                           {fraudRate.toFixed(0)}%
@@ -1381,8 +1388,8 @@ function App() {
               const fraudRate =
                 data.total_transactions > 0
                   ? (data.fraud_transactions /
-                    data.total_transactions) *
-                  100
+                      data.total_transactions) *
+                    100
                   : 0;
 
               return (
@@ -1400,8 +1407,8 @@ function App() {
                         fraudRate >= 50
                           ? "badge danger"
                           : fraudRate > 0
-                            ? "badge warning"
-                            : "badge safe"
+                          ? "badge warning"
+                          : "badge safe"
                       }
                     >
                       {fraudRate.toFixed(0)}%
@@ -1502,7 +1509,7 @@ function App() {
                     <span
                       className={
                         alert.fraud_status ===
-                          "Fraud"
+                        "Fraud"
                           ? "badge danger"
                           : "badge warning"
                       }
