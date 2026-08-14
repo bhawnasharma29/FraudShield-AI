@@ -1,135 +1,109 @@
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import os
+import resend
 
-from config import EMAIL_ADDRESS, EMAIL_PASSWORD
 
+# ============================================================
+# RESEND CONFIGURATION
+# ============================================================
+
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+
+if RESEND_API_KEY:
+    resend.api_key = RESEND_API_KEY
+
+
+# ============================================================
+# SEND OTP EMAIL
+# ============================================================
 
 def send_otp_email(receiver_email: str, otp: str) -> bool:
+
     subject = "FraudShield-AI OTP Verification"
 
-    body = f"""
-Hello,
+    html_body = f"""
+    <!DOCTYPE html>
+    <html>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6;">
 
-Your FraudShield-AI verification OTP is:
+        <h2>FraudShield-AI OTP Verification</h2>
 
-{otp}
+        <p>Hello,</p>
 
-This OTP is valid for 5 minutes.
+        <p>Your FraudShield-AI verification OTP is:</p>
 
-Do not share this OTP with anyone.
+        <h1 style="letter-spacing: 5px;">
+            {otp}
+        </h1>
 
-Thanks,
-FraudShield-AI Team
-"""
+        <p>
+            This OTP is valid for <strong>5 minutes</strong>.
+        </p>
 
-    # ============================================================
-    # OTP FOR DEMO
-    # ============================================================
-    # Render Free par Gmail SMTP blocked hone ki wajah se
-    # OTP ko logs mein bhi print kar rahe hain.
+        <p>
+            Do not share this OTP with anyone.
+        </p>
+
+        <p>
+            Thanks,<br>
+            <strong>FraudShield-AI Team</strong>
+        </p>
+
+    </body>
+    </html>
+    """
+
+    # ========================================================
+    # DEMO LOG
+    # ========================================================
+
     print("=" * 60)
     print("FRAUDSHIELD-AI OTP")
     print("TO:", receiver_email)
     print("OTP:", otp)
     print("=" * 60)
 
-    # ============================================================
-    # CREATE EMAIL
-    # ============================================================
+    # ========================================================
+    # CHECK API KEY
+    # ========================================================
 
-    message = MIMEMultipart()
-    message["From"] = EMAIL_ADDRESS
-    message["To"] = receiver_email
-    message["Subject"] = subject
-
-    message.attach(
-        MIMEText(
-            body,
-            "plain"
-        )
-    )
-
-    server = None
+    if not RESEND_API_KEY:
+        print("=" * 60)
+        print("RESEND ERROR")
+        print("RESEND_API_KEY is missing")
+        print("=" * 60)
+        return False
 
     try:
         print("=" * 60)
-        print("OTP EMAIL STARTED")
-        print("FROM:", EMAIL_ADDRESS)
+        print("RESEND EMAIL STARTED")
         print("TO:", receiver_email)
         print("=" * 60)
 
-        # Gmail SMTP
-        server = smtplib.SMTP(
-            "smtp.gmail.com",
-            587,
-            timeout=30
-        )
+        # ====================================================
+        # SEND EMAIL USING RESEND
+        # ====================================================
 
-        server.ehlo()
-        print("SMTP CONNECTION SUCCESS")
+        params = {
+            "from": "onboarding@resend.dev",
+            "to": [receiver_email],
+            "subject": subject,
+            "html": html_body,
+        }
 
-        # TLS
-        server.starttls()
-        server.ehlo()
-        print("TLS SUCCESS")
+        email = resend.Emails.send(params)
 
-        # Gmail login
-        server.login(
-            EMAIL_ADDRESS,
-            EMAIL_PASSWORD
-        )
-
-        print("GMAIL LOGIN SUCCESS")
-
-        # Send email
-        server.sendmail(
-            EMAIL_ADDRESS,
-            receiver_email,
-            message.as_string()
-        )
-
+        print("=" * 60)
         print("OTP EMAIL SENT SUCCESSFULLY")
+        print("RESEND RESPONSE:", email)
         print("=" * 60)
 
         return True
 
-    except smtplib.SMTPAuthenticationError as e:
-        print("=" * 60)
-        print("GMAIL AUTHENTICATION ERROR")
-        print("ERROR:", e)
-        print("=" * 60)
-
-        return False
-
-    except smtplib.SMTPConnectError as e:
-        print("=" * 60)
-        print("GMAIL SMTP CONNECTION ERROR")
-        print("ERROR:", e)
-        print("=" * 60)
-
-        return False
-
-    except smtplib.SMTPException as e:
-        print("=" * 60)
-        print("GMAIL SMTP ERROR")
-        print("ERROR:", e)
-        print("=" * 60)
-
-        return False
-
     except Exception as e:
         print("=" * 60)
-        print("EMAIL ERROR")
-        print(type(e).__name__)
+        print("RESEND EMAIL ERROR")
+        print("ERROR TYPE:", type(e).__name__)
         print("ERROR:", e)
         print("=" * 60)
 
         return False
-
-    finally:
-        if server is not None:
-            try:
-                server.quit()
-            except Exception:
-                pass
